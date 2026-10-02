@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Product Showcase</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#111;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+#carousel{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  background:#111;
+}
+
+.slide{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#111;
+}
+
+.slide.active{
+  display:flex;
+  animation:fade .4s ease;
+}
+
+@keyframes fade{
+  from{opacity:.3}
+  to{opacity:1}
+}
+
+/* Poster */
+.poster{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#111;
+}
+
+/* Information panel */
+.info{
+  position:absolute;
+  left:50%;
+  bottom:65px;
+  transform:translateX(-50%);
+  width:min(850px,calc(100% - 90px));
+  padding:18px 22px;
+  border-radius:16px;
+  background:rgba(0,0,0,.78);
+  color:white;
+  box-shadow:0 6px 25px rgba(0,0,0,.3);
+  backdrop-filter:blur(8px);
+}
+
+.product-name{
+  margin:0 0 7px;
+  font-size:clamp(20px,3vw,34px);
+  font-weight:700;
+}
+
+.description{
+  margin:0 0 12px;
+  font-size:clamp(13px,1.5vw,17px);
+  line-height:1.45;
+  color:#eee;
+}
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 18px;
+  font-size:12px;
+  color:#ddd;
+}
+
+.meta strong{
+  color:#fff;
+}
+
+.badge,.counter{
+  position:absolute;
+  z-index:20;
+  top:12px;
+  padding:7px 11px;
+  border-radius:20px;
+  background:rgba(0,0,0,.58);
+  border:1px solid rgba(255,255,255,.2);
+  color:#fff;
+  font-size:11px;
+  backdrop-filter:blur(6px);
+}
+
+.badge{
+  left:12px;
+  font-weight:bold;
+  letter-spacing:.5px;
+}
+
+.counter{
+  right:12px;
+}
+
+/* Navigation */
+.nav{
+  position:absolute;
+  z-index:20;
+  top:50%;
+  transform:translateY(-50%);
+  width:46px;
+  height:46px;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:50%;
+  background:rgba(0,0,0,.5);
+  color:#fff;
+  font-size:30px;
+  cursor:pointer;
+}
+
+.nav:hover{
+  background:rgba(255,255,255,.2);
+}
+
+.prev{left:12px}
+.next{right:12px}
+
+/* Bottom controls */
+.bottom{
+  position:absolute;
+  z-index:20;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  padding:10px 14px 14px;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));
+}
+
+.dots{
+  display:flex;
+  gap:6px;
+  max-width:60vw;
+  overflow:hidden;
+}
+
+.dot{
+  width:7px;
+  height:7px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.45);
+  cursor:pointer;
+}
+
+.dot.active{
+  width:23px;
+  border-radius:8px;
+  background:#fff;
+}
+
+.play{
+  padding:7px 11px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;
+  background:rgba(0,0,0,.5);
+  color:#fff;
+  font-size:11px;
+  cursor:pointer;
+}
+
+/* Loading/error */
+.status{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:30px;
+  color:#ddd;
+  background:#111;
+}
+
+.status h2{
+  margin:0 0 10px;
+  color:#fff;
+}
+
+.status p{
+  max-width:650px;
+  line-height:1.5;
+  font-size:13px;
+}
+
+.spinner{
+  width:38px;
+  height:38px;
+  margin-bottom:15px;
+  border:3px solid rgba(255,255,255,.2);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+@media(max-width:600px){
+
+  .info{
+    bottom:55px;
+    width:calc(100% - 65px);
+    padding:13px 15px;
+  }
+
+  .product-name{
+    font-size:20px;
+  }
+
+  .description{
+    font-size:12px;
+  }
+
+  .meta{
+    font-size:10px;
+    gap:5px 10px;
+  }
+
+  .nav{
+    width:38px;
+    height:38px;
+    font-size:24px;
+  }
+
+  .prev{left:6px}
+  .next{right:6px}
+
+  .badge,.counter{
+    top:7px;
+    font-size:9px;
+    padding:6px 8px;
+  }
+
+  .badge{left:7px}
+  .counter{right:7px}
+}
+</style>
+</head>
+
+<body>
+
+<div id="carousel">
+  <div class="status">
+    <div class="spinner"></div>
+    <h2>Loading student products...</h2>
+    <p>Connecting to Google Apps Script.</p>
+  </div>
+</div>
+
+<script>
+
+/*
+==========================================================
+IMPORTANT
+Replace the URL below with your Google Apps Script
+Web App URL.
+
+Apps Script:
+Deploy → Manage deployments → Web app URL
+
+Example:
+https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+==========================================================
+*/
+
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyO7BaYkjDmcg2asavZbvPFYpSFr_Uz7ntEUMyWEw-25QF-pzeDBl573Vx1VFw4snXyvw/exec";
+
+const AUTO_PLAY_MS = 6000;
+
+let products = [];
+let currentSlide = 0;
+let autoPlay = true;
+let timer = null;
+
+
+/*
+The Apps Script JSONP API calls this function and supplies
+the approved submissions.
+
+Each item contains:
+submissionId
+studentName
+section
+productName
+productDescription
+imageUrl
+*/
+
+window.projectItechProducts = function(items){
+
+  clearTimeout(window.apiTimeout);
+
+  products = Array.isArray(items) ? items : [];
+
+  if(!products.length){
+
+    showStatus(
+      "No approved posters found.",
+      "The connection worked, but there are currently no approved submissions."
+    );
+
+    return;
+  }
+
+  buildCarousel();
+
+  showSlide(0);
+
+  startAutoPlay();
+};
+
+
+function loadProducts(){
+
+  if(
+    !APPS_SCRIPT_URL ||
+    APPS_SCRIPT_URL.includes("PASTE_YOUR")
+  ){
+
+    showStatus(
+      "Apps Script URL is missing.",
+      "Edit index.html and replace PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE with your actual Web App URL."
+    );
+
+    return;
+  }
+
+  showStatus(
+    "Loading student products...",
+    "Connecting to Google Apps Script."
+  );
+
+  const oldScript =
+    document.getElementById("productsJsonp");
+
+  if(oldScript)
+    oldScript.remove();
+
+
+  const script =
+    document.createElement("script");
+
+  script.id =
+    "productsJsonp";
+
+  script.src =
+    APPS_SCRIPT_URL +
+    "?api=products&callback=projectItechProducts&t=" +
+    Date.now();
+
+
+  script.onerror = function(){
+
+    clearTimeout(window.apiTimeout);
+
+    showStatus(
+      "Unable to connect to the promotion poster server.",
+      "Check that your Apps Script Web App is deployed for Anyone and that the URL in index.html is correct."
+    );
+
+  };
+
+
+  document.body.appendChild(script);
+
+
+  window.apiTimeout =
+    setTimeout(function(){
+
+      showStatus(
+        "The server did not return a response.",
+        "The GitHub page did not receive the Apps Script response."
+      );
+
+    },15000);
+}
+
+
+function buildCarousel(){
+
+  const carousel =
+    document.getElementById("carousel");
+
+  carousel.innerHTML = "";
+
+
+  products.forEach(function(item,index){
+
+    const slide =
+      document.createElement("div");
+
+    slide.className =
+      "slide";
+
+
+    /*
+    Poster image
+    */
+    const img =
+      document.createElement("img");
+
+    img.className =
+      "poster";
+
+    img.alt =
+      item.productName ||
+      "Student promotional poster";
+
+    img.src =
+      item.imageUrl || "";
+
+
+    slide.appendChild(img);
+
+
+    /*
+    INFORMATION PANEL
+
+    This is the part that was missing from the
+    previous GitHub version.
+    */
+
+    const info =
+      document.createElement("div");
+
+    info.className =
+      "info";
+
+
+    const productName =
+      document.createElement("h2");
+
+    productName.className =
+      "product-name";
+
+    productName.textContent =
+      item.productName ||
+      "Product Name";
+
+    info.appendChild(productName);
+
+
+    const description =
+      document.createElement("p");
+
+    description.className =
+      "description";
+
+    description.textContent =
+      item.productDescription ||
+      "No product description provided.";
+
+    info.appendChild(description);
+
+
+    const meta =
+      document.createElement("div");
+
+    meta.className =
+      "meta";
+
+
+    meta.innerHTML =
+      "<span><strong>Student:</strong> " +
+      escapeHtml(item.studentName) +
+      "</span>" +
+
+      "<span><strong>Section:</strong> " +
+      escapeHtml(item.section) +
+      "</span>" +
+
+      "<span><strong>Submission:</strong> " +
+      escapeHtml(item.submissionId) +
+      "</span>";
+
+
+    info.appendChild(meta);
+
+    slide.appendChild(info);
+
+
+    carousel.appendChild(slide);
+
+  });
+
+
+  /*
+  Header badge
+  */
+
+  const badge =
+    document.createElement("div");
+
+  badge.className =
+    "badge";
+
+  badge.textContent =
+    "STUDENT PRODUCT SHOWCASE";
+
+  carousel.appendChild(badge);
+
+
+  /*
+  Slide counter
+  */
+
+  const counter =
+    document.createElement("div");
+
+  counter.id =
+    "counter";
+
+  counter.className =
+    "counter";
+
+  carousel.appendChild(counter);
+
+
+  /*
+  Previous button
+  */
+
+  const prev =
+    document.createElement("button");
+
+  prev.className =
+    "nav prev";
+
+  prev.type =
+    "button";
+
+  prev.textContent =
+    "‹";
+
+  prev.setAttribute(
+    "aria-label",
+    "Previous poster"
+  );
+
+  prev.onclick =
+    previousSlide;
+
+  carousel.appendChild(prev);
+
+
+  /*
+  Next button
+  */
+
+  const next =
+    document.createElement("button");
+
+  next.className =
+    "nav next";
+
+  next.type =
+    "button";
+
+  next.textContent =
+    "›";
+
+  next.setAttribute(
+    "aria-label",
+    "Next poster"
+  );
+
+  next.onclick =
+    nextSlide;
+
+  carousel.appendChild(next);
+
+
+  /*
+  Bottom controls
+  */
+
+  const bottom =
+    document.createElement("div");
+
+  bottom.className =
+    "bottom";
+
+
+  const dots =
+    document.createElement("div");
+
+  dots.className =
+    "dots";
+
+
+  products.forEach(function(item,index){
+
+    const dot =
+      document.createElement("button");
+
+    dot.className =
+      "dot";
+
+    dot.type =
+      "button";
+
+    dot.setAttribute(
+      "aria-label",
+      "Show poster " + (index + 1)
+    );
+
+    dot.onclick =
+      function(){
+
+        showSlide(index);
+
+        restartAutoPlay();
+
+      };
+
+
+    dots.appendChild(dot);
+
+  });
+
+
+  bottom.appendChild(dots);
+
+
+  const play =
+    document.createElement("button");
+
+  play.id =
+    "playButton";
+
+  play.className =
+    "play";
+
+  play.type =
+    "button";
+
+  play.textContent =
+    "❚❚ Pause";
+
+  play.onclick =
+    toggleAutoPlay;
+
+
+  bottom.appendChild(play);
+
+  carousel.appendChild(bottom);
+
+}
+
+
+function showSlide(index){
+
+  if(!products.length)
+    return;
+
+
+  const slides =
+    document.querySelectorAll(".slide");
+
+  const dots =
+    document.querySelectorAll(".dot");
+
+
+  if(index >= products.length)
+    index = 0;
+
+  if(index < 0)
+    index = products.length - 1;
+
+
+  slides.forEach(function(slide){
+
+    slide.classList.remove("active");
+
+  });
+
+
+  dots.forEach(function(dot){
+
+    dot.classList.remove("active");
+
+  });
+
+
+  if(slides[index])
+    slides[index].classList.add("active");
+
+
+  if(dots[index])
+    dots[index].classList.add("active");
+
+
+  currentSlide =
+    index;
+
+
+  const counter =
+    document.getElementById("counter");
+
+
+  if(counter){
+
+    counter.textContent =
+      (index + 1) +
+      " / " +
+      products.length;
+
+  }
+
+}
+
+
+function nextSlide(){
+
+  showSlide(
+    currentSlide + 1
+  );
+
+  restartAutoPlay();
+
+}
+
+
+function previousSlide(){
+
+  showSlide(
+    currentSlide - 1
+  );
+
+  restartAutoPlay();
+
+}
+
+
+function startAutoPlay(){
+
+  clearInterval(timer);
+
+  if(!autoPlay)
+    return;
+
+
+  timer =
+    setInterval(function(){
+
+      showSlide(
+        currentSlide + 1
+      );
+
+    },AUTO_PLAY_MS);
+
+}
+
+
+function restartAutoPlay(){
+
+  if(autoPlay)
+    startAutoPlay();
+
+}
+
+
+function toggleAutoPlay(){
+
+  const button =
+    document.getElementById("playButton");
+
+  autoPlay =
+    !autoPlay;
+
+
+  if(autoPlay){
+
+    button.textContent =
+      "❚❚ Pause";
+
+    startAutoPlay();
+
+  }else{
+
+    button.textContent =
+      "▶ Play";
+
+    clearInterval(timer);
+
+  }
+
+}
+
+
+function showStatus(title,detail){
+
+  document.getElementById("carousel").innerHTML =
+    '<div class="status">' +
+
+      '<h2>' +
+      escapeHtml(title) +
+      '</h2>' +
+
+      '<p>' +
+      escapeHtml(detail) +
+      '</p>' +
+
+    '</div>';
+
+}
+
+
+function escapeHtml(text){
+
+  return String(text || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
